@@ -42,7 +42,8 @@ The **Patient Persona Chatbot** is an innovative project designed to enhance nur
      AZURE_ENDPOINT=your_api_key_here
      AZURE_OPENAI_KEY=your_api_key_here
      ```
-4. Run the application:
+4. Make sure to store Patient_Persona_Name, Patient_Persona_Age, Patient_Persona_Gender, Patient_Persona_Visit_Reason, Patient_Persona_Background_Information, Patient_Persona_Manual_Input and Patient_Persona_Introduction_Text inside the Supabase database. 
+5. Run the application:
    ```bash
    streamlit run Patient_Persona_Chat_Bot.py
    ```
