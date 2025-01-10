@@ -1,4 +1,4 @@
-# Patient Persona Chatbot
+# Nursing Project
 
 #### Authors: Yash Pankhania, Tiffany Kim
 Revolutionizing nursing education through AI-powered virtual patient systems.
