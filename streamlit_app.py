@@ -16,6 +16,10 @@ import tempfile
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 
+def next_temp_file():
+    return os.path.join(tempfile.gettempdir(), next(tempfile._get_candidate_names()))
+
+
 def check_password():
     """Returns `True` if the user had the correct password."""
 
@@ -66,7 +70,7 @@ def text_to_speech(client, input_text):
         response = client.audio.speech.create(
             model="tts-1", voice="nova", input=input_text
         )
-        file_name = tempfile.TemporaryFile(suffix=".mp3").name
+        file_name = next_temp_file() + ".mp3"
         response.stream_to_file(file_name)
         autoplay_audio(file_name)
         os.remove(file_name)
@@ -201,7 +205,7 @@ def main():
                 # and audio_bytes
                 # != b"RIFF,\x00\x00\x00WAVEfmt \x10\x00\x00\x00\x01\x00\x02\x00\x80\xbb\x00\x00\x00\xee\x02\x00\x04\x00\x10\x00data\x00\x00\x00\x00"
             ):
-                with open(tempfile.TemporaryFile(suffix=".wav").name, "wb") as f:
+                with open(next_temp_file() + ".wav", "wb") as f:
                     f.write(audio_bytes)
                 transcript = speech_to_text(client, f.name)
                 os.remove(f.name)
