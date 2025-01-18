@@ -36,24 +36,6 @@ def get_assistant(client):
     return assistant.id
 
 
-def get_instruction():
-    user_instruction = []
-    for key, val in st.session_state.settings["instruction"]["user"].items():
-        if re.search(r"(jpg|png|webp)$", val):
-            continue
-        user_instruction.append(f"{key.replace("_", " ")}: {val}")
-
-    user_instruction = "\n".join(user_instruction)
-    assistant_instruction = []
-    for key, val in st.session_state.settings["instruction"]["assistant"].items():
-        assistant_instruction.append(f"{key.replace("_", " ")}: {val}")
-    assistant_instruction = "\n".join(assistant_instruction)
-    assistant_instruction = assistant_instruction.replace(
-        "{user_instruction}", user_instruction
-    )
-    return assistant_instruction
-
-
 @st.cache_data
 def local_css(file_name):
     with open(file_name) as f:
@@ -119,7 +101,7 @@ def main():
     if "assistant_id" not in st.session_state:
         st.session_state.assistant_id = get_assistant(client)
     if "assistant_instruction" not in st.session_state:
-        st.session_state.assistant_instruction = get_instruction()
+        st.session_state.assistant_instruction = st.session_state.settings['instruction']
     if "messages" not in st.session_state:
         st.session_state.messages = []
     if "manual_input" not in st.session_state:
@@ -136,7 +118,7 @@ def main():
     st.sidebar.header("Chat with " + st.session_state.settings["assistant_name"])
     container1 = st.sidebar.container(border=True)
     with container1:
-        for key, val in st.session_state.settings["instruction"]["user"].items():
+        for key, val in st.session_state.settings["sidebar"].items():
             if re.search(r"(jpg|png|webp)$", val):
                 st.image(val, caption=key.replace("_", " "))
             else:

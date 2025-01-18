@@ -1,6 +1,5 @@
-# Nursing Project
+# AI Sim Bot
 
-#### Authors: Yash Pankhania, Tiffany Kim
 Revolutionizing nursing education through AI-powered virtual patient systems.
 
 ## Overview
@@ -18,36 +17,11 @@ The **Patient Persona Chatbot** is an innovative project designed to enhance nur
 - **Performance Feedback**: Offers immediate evaluations and feedback to students, enabling precise skill development.
 - **Transcript Downloads**: Allows students to download a complete conversation with the virtual patient as a PDF.
 
-## Technologies Used
-
-- **[Streamlit](https://streamlit.io/)**: For building an interactive user interface.
-- **OpenAI Assistant API**: Powers the chatbot's natural language processing capabilities.
-
 ## Installation
 
-1. Clone this repository:
-   ```bash
-   https://github.com/Draconian10/Nursing_Project.git
-   ```
-2. Install the required dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-3. Set up your OpenAI API key:
-   - Create a `.env` file in the root directory.
-   - Add your OpenAI API key:
-     ```env
-     OPENAI_API_KEY=your_api_key_here
-     SUPABASE_URL=your_api_key_here
-     SUPABASE_KEY=your_api_key_here
-     AZURE_ENDPOINT=your_api_key_here
-     AZURE_OPENAI_KEY=your_api_key_here
-     ```
-4. Make sure to store Patient_Persona_Name, Patient_Persona_Age, Patient_Persona_Gender, Patient_Persona_Visit_Reason, Patient_Persona_Background_Information, Patient_Persona_Manual_Input and Patient_Persona_Introduction_Text inside the Supabase database. 
-5. Run the application:
-   ```bash
-   streamlit run Patient_Persona_Chat_Bot.py
-   ```
+1. [Create an account](https://github.com/signup) on Github.com.
+2. [Create an account](https://platform.openai.com/api-keys) on OpenAI.com and create an API key.
+3. [Create an account](https://streamlit.app/) on Streamlit.app.
 
 ## Usage
 
@@ -60,3 +34,14 @@ The **Patient Persona Chatbot** is an innovative project designed to enhance nur
 ---
 
 Together, let's improve nursing education through technology!
+
+## Technologies Used
+
+- **[Streamlit](https://streamlit.io/)**: For building an interactive user interface.
+- **OpenAI Assistant API**: Powers the chatbot's natural language processing capabilities.
+
+
+## Contributers
+
+* Yash Pankhania
+* Tiffany Kim
