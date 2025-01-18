@@ -11,7 +11,7 @@ from docx import Document
 import tomllib
 import hmac
 import warnings
-
+import tempfile
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
@@ -68,23 +68,28 @@ def local_css(file_name):
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 
-def speech_to_text(client, audio_data):
+def speech_to_text(client, file):
     try:
-        with open(audio_data, "rb") as audio_file:
+        with open(file, "rb") as f:
             transcript = client.audio.transcriptions.create(
-                model="whisper-1", response_format="text", file=audio_file
+                model="whisper-1", response_format="text", file=f
             )
             return transcript
-    except:
-        return
+    except Exception as e:
+        print("speech_to_text:", e)
 
 
 def text_to_speech(client, input_text):
-    response = client.audio.speech.create(model="tts-1", voice="nova", input=input_text)
-    webm_file_path = "temp_audio_play.mp3"
-    with open(webm_file_path, "wb") as f:
-        response.stream_to_file(webm_file_path)
-    return webm_file_path
+    try:
+        response = client.audio.speech.create(
+            model="tts-1", voice="nova", input=input_text
+        )
+        file_name = tempfile.TemporaryFile(suffix=".mp3").name
+        response.stream_to_file(file_name)
+        autoplay_audio(file_name)
+        os.remove(file_name)
+    except Exception as e:
+        print("text_to_speech:", e)
 
 
 def autoplay_audio(file_path: str):
@@ -219,11 +224,11 @@ def main():
                 # and audio_bytes
                 # != b"RIFF,\x00\x00\x00WAVEfmt \x10\x00\x00\x00\x01\x00\x02\x00\x80\xbb\x00\x00\x00\xee\x02\x00\x04\x00\x10\x00data\x00\x00\x00\x00"
             ):
-                webm_file_path = "temp_audio.mp3"
-                with open(webm_file_path, "wb") as f:
+                with open(tempfile.TemporaryFile(suffix=".wav").name, "wb") as f:
                     f.write(audio_bytes)
-                transcript = speech_to_text(client, webm_file_path)
-                os.remove(webm_file_path)
+                transcript = speech_to_text(client, f.name)
+                os.remove(f.name)
+
                 if transcript:
                     user_query = transcript  # Ensure you extract the text from the transcript object correctly
                     st.session_state.processed_audio = (
@@ -304,8 +309,7 @@ def main():
                     {"role": "assistant", "content": assistant_reply}
                 )
                 if not st.session_state.end_session_button_clicked:
-                    audio_file = text_to_speech(client, assistant_reply)
-                    autoplay_audio(audio_file)
+                    text_to_speech(client, assistant_reply)
 
     st.sidebar.warning(st.session_state.settings["warning"])
 
