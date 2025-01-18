@@ -101,7 +101,9 @@ def main():
     if "assistant_id" not in st.session_state:
         st.session_state.assistant_id = get_assistant(client)
     if "assistant_instruction" not in st.session_state:
-        st.session_state.assistant_instruction = st.session_state.settings['instruction']
+        st.session_state.assistant_instruction = st.session_state.settings[
+            "instruction"
+        ]
     if "messages" not in st.session_state:
         st.session_state.messages = []
     if "manual_input" not in st.session_state:

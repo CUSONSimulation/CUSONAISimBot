@@ -20,20 +20,35 @@ The **Patient Persona Chatbot** is an innovative project designed to enhance nur
 ## Installation
 
 1. [Create an account](https://github.com/signup) on Github.com.
-2. [Create an account](https://platform.openai.com/api-keys) on OpenAI.com and create an API key.
+2. [Create an account](https://platform.openai.com/api-keys) on OpenAI.com.
+    * [Generate an API key]((https://platform.openai.com/api-keys))
+    * Make sure to write down the key because you won't be able to see it again.
 3. [Create an account](https://streamlit.app/) on Streamlit.app.
+    * Click "Create an app"
+    * Select "Deploy from repo"
+    * Type the url for your forked repository.
+    * Give a unique and memorable URL for your app.
+    * Choose Advanced settings.
+    * Under the secrets provide your OpenAI API key with the exact format below.
+    * Choose save and click deploy.
 
-## Usage
+```toml
+OPENAI_API_KEY = "xxxxxx"
+```
 
-1. Launch the application in your browser.
-2. Choose a patient persona and scenario.
-3. Interact with the chatbot, asking and answering questions as you would with a real patient.
-4. Receive instant feedback on your performance.
-5. Download a transcript of the interaction as a PDF.
+Changing secrets takes around a few minutes to propagate, so most likely you'll get an error about key not found. Wait for a few minutes, and reboot the app.
 
----
+If you still get the same error, make sure you can find the key in the [app settings > Secrets.](https://docs.streamlit.io/deploy/streamlit-community-cloud/deploy-your-app/secrets-management)
 
-Together, let's improve nursing education through technology!
+Once everything goes well, you'll see the user interface.
+
+In order to test to make sure everything works:
+1. Click Share and get the link for your app.
+2. Either log out from Sstreamlit or open the link in a private browsing window.
+    * Chrome, Safari, Edge: Ctrl-Shift-N (Windows) or Command-Shift-N (macOS)
+    * Firefox: Ctrl-Shift-P (Windows) or Command-Shift-P (macOS)---
+
+Together, let's improve education through technology!
 
 ## Technologies Used
 
