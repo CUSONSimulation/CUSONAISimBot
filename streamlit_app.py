@@ -3,21 +3,15 @@ import os
 from openai import OpenAI
 from io import BytesIO
 import base64
-from st_audiorec import st_audiorec
+from streamlit_mic_recorder import mic_recorder
 import re
-from openai.types.beta.assistant_stream_event import ThreadMessageDelta
-from openai.types.beta.threads.text_delta_block import TextDeltaBlock
 from docx import Document
 import tomllib
 import hmac
 import warnings
-import tempfile
+import io
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
-
-
-def next_temp_file():
-    return os.path.join(tempfile.gettempdir(), next(tempfile._get_candidate_names()))
 
 
 def check_password():
@@ -54,13 +48,12 @@ def local_css(file_name):
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 
-def speech_to_text(client, file):
+def speech_to_text(client, audio):
     try:
-        with open(file, "rb") as f:
-            transcript = client.audio.transcriptions.create(
-                model="whisper-1", response_format="text", file=f
-            )
-            return transcript
+        transcript = client.audio.transcriptions.create(
+            model="whisper-1", response_format="text", file=audio
+        )
+        return transcript
     except Exception as e:
         print("speech_to_text:", e)
 
@@ -70,18 +63,13 @@ def text_to_speech(client, input_text):
         response = client.audio.speech.create(
             model="tts-1", voice="nova", input=input_text
         )
-        file_name = next_temp_file() + ".mp3"
-        response.stream_to_file(file_name)
-        autoplay_audio(file_name)
-        os.remove(file_name)
+        autoplay_audio(response.content)
     except Exception as e:
         print("text_to_speech:", e)
 
 
-def autoplay_audio(file_path: str):
-    with open(file_path, "rb") as f:
-        data = f.read()
-    b64 = base64.b64encode(data).decode("utf-8")
+def autoplay_audio(audio_data):
+    b64 = base64.b64encode(audio_data).decode("utf-8")
     md = f"""
     <audio autoplay>
     <source src="data:audio/mp3;base64,{b64}" type="audio/mp3">
@@ -194,33 +182,23 @@ def main():
         footer_container = st.sidebar.container(border=True)
 
         with footer_container:
-            # audio_bytes = audio_recorder(text="Click to Record", icon_size="2x", neutral_color="#30475E")
-            audio_bytes = st_audiorec()
-            # st.write(audio_bytes)
-
+            audio = mic_recorder(
+                start_prompt="Record",
+                stop_prompt="Stop",
+                just_once=False,
+                use_container_width=True,
+                format="webm",
+                key="recorder",
+            )
             # Check if there is a new audio recording and it has not been processed yet
-            if (
-                audio_bytes
-                and audio_bytes != st.session_state.processed_audio
-                # and audio_bytes
-                # != b"RIFF,\x00\x00\x00WAVEfmt \x10\x00\x00\x00\x01\x00\x02\x00\x80\xbb\x00\x00\x00\xee\x02\x00\x04\x00\x10\x00data\x00\x00\x00\x00"
-            ):
-                with open(next_temp_file() + ".wav", "wb") as f:
-                    f.write(audio_bytes)
-                transcript = speech_to_text(client, f.name)
-                os.remove(f.name)
+            if audio and audio["id"] != st.session_state.processed_audio:
+                audio_bio = io.BytesIO(audio["bytes"])
+                audio_bio.name = "audio.webm"
+                transcript = speech_to_text(client, audio_bio)
 
                 if transcript:
                     user_query = transcript  # Ensure you extract the text from the transcript object correctly
-                    st.session_state.processed_audio = (
-                        audio_bytes  # Update the processed audio state
-                    )
-            # if (
-            #    audio_bytes
-            #    == b"RIFF,\x00\x00\x00WAVEfmt \x10\x00\x00\x00\x01\x00\x02\x00\x80\xbb\x00\x00\x00\xee\x02\x00\x04\x00\x10\x00data\x00\x00\x00\x00"
-            # ):
-            #     st.error("Something went wrong. Kindly refresh the page and try again.")
-            #     st.stop()
+                    st.session_state.processed_audio = audio["id"]
 
         if user_query:
             if user_query.lower() == "exit":
@@ -235,7 +213,9 @@ def main():
                 st.markdown(user_query)
 
             # Store the user's query into the history
-            st.session_state.messages.append({"role": "user", "content": user_query})
+            st.session_state.messages.append(
+                {"role": "user", "content": user_query.strip()}
+            )
 
             # Stream the assistant's reply
             with st.chat_message(
@@ -263,7 +243,7 @@ def main():
 
                 # Once the stream is over, update chat history
                 st.session_state.messages.append(
-                    {"role": "assistant", "content": assistant_reply}
+                    {"role": "assistant", "content": assistant_reply.strip()}
                 )
                 if not st.session_state.end_session_button_clicked:
                     text_to_speech(client, assistant_reply)
