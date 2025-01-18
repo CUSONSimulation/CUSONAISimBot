@@ -152,7 +152,7 @@ def main():
             else:
                 st.subheader(f"{key.replace("_", " ")}: {val}")
 
-    # Button to start the chat session
+    # Button Login
     col1, col2, col3 = st.sidebar.columns([1, 1, 1])
     with col2:
         if check_password():
