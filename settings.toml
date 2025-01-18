@@ -1,0 +1,20 @@
+title = "AI Sim Bot"
+intro = "This is intro."
+warning = "Please be advised that this patient simulation includes themes and discussions of substance use. This simulation might evoke strong emotions or may be distressing for individuals with personal experiences related to substance use or addiction. If you feel overwhelmed by the content, please discontinue the simulation and reach out to your course faculty, or schedule an appointment with [Northeastern University Health & Counseling Services](https://uhcs.northeastern.edu/). If you or someone you know is struggling with substance use or addiction, support is available."
+user_name = "Nurse"
+user_avatar = "assets/Assistant.jpg"
+assistant_name = "Jordan"
+assistant_avatar = "assets/Jordan.jpg"
+
+[instruction.user]
+Jordan_Avatar = "assets/Jordan.jpg"
+Name = "Jordan"
+Age = "16"
+Gender = "NB"
+Visit_Reason = "Physical exam"
+Background_Information = "This is backround."
+
+
+[instruction.assistant]
+manual_input = ""
+ai_generation = ""

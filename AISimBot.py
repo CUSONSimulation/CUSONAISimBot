@@ -1,39 +1,72 @@
-import openai
 import streamlit as st
-from openai import AzureOpenAI
-# from dotenv import load_dotenv
 import os
 from openai import OpenAI
 from io import BytesIO
 import base64
-# from audio_recorder_streamlit import audio_recorder
 from st_audiorec import st_audiorec
-from streamlit_float import *
-from supabase import create_client, Client
 import re
 from openai.types.beta.assistant_stream_event import ThreadMessageDelta
 from openai.types.beta.threads.text_delta_block import TextDeltaBlock
 from docx import Document
-import toml
+import tomllib
 import warnings
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
+def load_settings():
+    return tomllib.load(open("settings.toml", "rb"))
+
+def get_assistant(client):
+    name = st.session_state.settings['title']
+    print("Getting assistant:", name)
+    has_more = True
+    after = None
+    while has_more == True:
+        assistants = client.beta.assistants.list(after=after)
+        for assistant in assistants.data:
+            if assistant.name == name:
+                return assistant.id
+        has_more = assistants.has_more
+        after = assistants.last_id
+
+        #Can't find, create a new one
+    assistant = client.beta.assistants.create(
+        name=name,
+        model="gpt-4o"
+    )
+    return assistant.id
+
+def get_instruction():
+    user_instruction = []
+    for key,val in st.session_state.settings["instruction"]["user"].items():
+        if re.search(r"(jpg|png|webp)$", val):
+            continue
+        user_instruction.append(f"{key.replace("_", " ")}: {val}")
+
+    user_instruction = "\n".join(user_instruction)
+    assistant_instruction = []
+    for key,val in st.session_state.settings["instruction"]["assistant"].items():
+        assistant_instruction.append(f"{key.replace("_", " ")}: {val}")
+    assistant_instruction = "\n".join(assistant_instruction)
+    assistant_instruction = assistant_instruction.replace("{user_instruction}", user_instruction)
+    return assistant_instruction
+
+@st.cache_data
 def local_css(file_name):
     with open(file_name) as f:
         st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 
-def speech_to_text(client_speech, audio_data):
+def speech_to_text(client, audio_data):
     with open(audio_data, "rb") as audio_file:
-        transcript = client_speech.audio.transcriptions.create(
+        transcript = client.audio.transcriptions.create(
             model="whisper-1",
             response_format="text",
             file=audio_file
         )
     return transcript
 
-def text_to_speech(client_speech, input_text):
-    response = client_speech.audio.speech.create(
+def text_to_speech(client, input_text):
+    response = client.audio.speech.create(
         model="tts-1",
         voice="nova",
         input=input_text
@@ -55,114 +88,61 @@ def autoplay_audio(file_path: str):
     st.markdown(md, unsafe_allow_html=True)
 
 # Function to generate Word document from the transcript
-def create_transcript_word(transcript):
+def create_transcript_word():
     doc = Document()
-    doc.add_heading("Nurse - Patient Conversation Transcript\n", level=1)
+    doc.add_heading("Conversation Transcript\n", level=1)
 
-    for line in transcript:
-        if line.startswith("Patient:"):
+    for message in st.session_state.messages:
+        if message["role"] == "user":
             p = doc.add_paragraph()
-            p.add_run("Patient:").bold = True
-            p.add_run(line[len("Patient:"):])
-        elif line.startswith("Student Nurse:"):
-            p = doc.add_paragraph()
-            p.add_run("Student Nurse:").bold = True
-            p.add_run(line[len("Student Nurse:"):])
+            p.add_run(st.session_state.settings['user_name'] + ": ").bold = True
+            p.add_run(message["content"])
         else:
-            doc.add_paragraph(line)
+            p = doc.add_paragraph()
+            p.add_run(st.session_state.settings['assistant_name']+": ").bold = True
+            p.add_run(message["content"])
 
     buffer = BytesIO()
     doc.save(buffer)
     buffer.seek(0)
     return buffer
 
-# Function to initialize or retrieve the assistant and thread
-def init_thread(client_azure):
-    # Create a Thread
-    st.session_state.thread = client_azure.beta.threads.create()
-    # st.session_state.messages = []
-
 def main():
-    # load_dotenv('patient_persona.env')
     # Inject CSS for custom styles
-    local_css("patient_persona_style.css")
+    local_css("style.css")
 
-    SUPABASE_URL = st.secrets['SUPABASE_URL']
-    SUPABASE_KEY = st.secrets['SUPABASE_KEY']
-    supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
-
-    st.session_state.assistant_id = "asst_3kMmf6f7HKR8i14CJSZy9uPf"
-
-    if 'messages' not in st.session_state:
-        st.session_state.messages = []
-    if 'conversation_history' not in st.session_state:
-        st.session_state.conversation_history = []
-    if 'full_transcript' not in st.session_state:
-        st.session_state.full_transcript = []
-    if 'processed_audio' not in st.session_state:
-        st.session_state.processed_audio = None  # Initialize the processed audio state
-    if 'assistant_instruction' not in st.session_state:
-        st.session_state.assistant_instruction = None
+    client = OpenAI(api_key=st.secrets['OPENAI_API_KEY'])
+    if 'settings' not in st.session_state:
+        st.session_state.settings = load_settings()
     if 'assistant_id' not in st.session_state:
-        st.session_state.assistant_id = None
-    if "chat_history" not in st.session_state:
-        st.session_state.chat_history = []
+        st.session_state.assistant_id = get_assistant(client)
+    if 'assistant_instruction' not in st.session_state:
+        st.session_state.assistant_instruction = get_instruction()
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
     if "manual_input" not in st.session_state:
         st.session_state.manual_input = None  # Add this line to initialize manual input
     if "end_session_button_clicked" not in st.session_state:
         st.session_state.end_session_button_clicked = False  # Initialize the state to track the button click
+    if 'processed_audio' not in st.session_state:
+        st.session_state.processed_audio = None  # Initialize the processed audio state
 
-    st.title("AI SimBot")
+    st.title(st.session_state.settings["title"])
 
-    client_azure = AzureOpenAI(
-        azure_endpoint=st.secrets["AZURE_ENDPOINT"],
-        api_key=st.secrets["AZURE_OPENAI_KEY"],
-        api_version="2024-02-15-preview"
-    )
 
-    client_speech = OpenAI(api_key=st.secrets['OPENAI_API_KEY'])
-
-    response = supabase.table("Patient_Persona_Instructions").select("*").eq('Patient_Persona_Active_Flag',
-                                                                             'Y').execute()
-    data = response.data
-
-    if data and isinstance(data, list) and len(data) > 0:
-        patient_persona_name = data[0].get("Patient_Persona_Name")
-        patient_persona_age = data[0].get("Patient_Persona_Age")
-        patient_persona_gender = data[0].get("Patient_Persona_Gender")
-        patient_persona_visit_reason = data[0].get("Patient_Persona_Visit_Reason")
-        patient_persona_background_information = data[0].get('Patient_Persona_Background_Information')
-        patient_persona_manual_input = data[0].get('Patient_Persona_Manual_Input')
-        patient_persona_ai_generation = data[0].get('Patient_Persona_AI_Generation')
-        patient_persona_introduction_text = data[0].get('Patient_Persona_Introduction_Text')
-
-    # if selected_tab == "Manual Input":
     st.sidebar.header("Chat with your Patient")
     container1 = st.sidebar.container(border=True)
     with container1:
-        st.subheader(f"Name: {patient_persona_name}")
-        st.subheader(f"Age: {patient_persona_age}")
-        st.subheader(f"Gender: {patient_persona_gender}")
-        st.subheader(f"Reason for Visit: {patient_persona_visit_reason}")
-        st.image('Patient_Persona_Assets/Jordan_Avatar.jpg')
+        for key,val in st.session_state.settings["instruction"]["user"].items():
+            if re.search(r"(jpg|png|webp)$", val):
+                st.image(val, caption=key.replace("_", " "))
+            else:
+                st.subheader(f"{key.replace("_", " ")}: {val}")
 
-    if patient_persona_manual_input:
-        # Perform replacements for each placeholder
-        patient_persona_manual_input_modified = re.sub(r'\{patient_persona_name\}', patient_persona_name,
-                                                       patient_persona_manual_input)
-        patient_persona_manual_input_modified = re.sub(r'\{patient_persona_age\}', str(patient_persona_age),
-                                                       patient_persona_manual_input_modified)
-        patient_persona_manual_input_modified = re.sub(r'\{patient_persona_gender\}', patient_persona_gender,
-                                                       patient_persona_manual_input_modified)
-        patient_persona_manual_input_modified = re.sub(r'\{patient_persona_visit_reason\}',
-                                                       patient_persona_visit_reason,
-                                                       patient_persona_manual_input_modified)
-        patient_persona_manual_input_modified = re.sub(r'\{patient_persona_background_information\}',
-                                                       patient_persona_background_information,
-                                                       patient_persona_manual_input_modified)
 
-        init_thread(client_azure)
-        st.session_state.assistant_instruction = patient_persona_manual_input_modified
+
+
+
 
     # Button to start the chat session
     col1, col2, col3 = st.sidebar.columns([1, 1, 1])
@@ -170,9 +150,6 @@ def main():
         if st.button('Start Chat'):
             st.session_state["chat_active"] = True
             st.session_state.messages = []
-            st.session_state.conversation_history = []
-            st.session_state.full_transcript = []
-            st.session_state.chat_history = []
             st.session_state.show_text = False  # Hide the text when Start Chat is pressed
 
     # Display text before Start Chat is pressed
@@ -182,18 +159,18 @@ def main():
     if st.session_state.show_text:
         container2 = st.container(border=True)
         with container2:
-            st.markdown(patient_persona_introduction_text)
+            st.markdown(st.session_state.settings['intro'])
 
     # Check if chat is active
     if st.session_state.get("chat_active"):
         st.sidebar.header('Speech Input')
 
-        for message in st.session_state.chat_history:
+        for message in st.session_state.messages:
             if message["role"] == 'user':
-                with st.chat_message(message["role"], avatar="Patient_Persona_Assets/Nurse_Avatar.png"):
+                with st.chat_message(st.session_state.settings['user_name'], avatar=st.session_state.settings['user_avatar']):
                     st.markdown(message["content"])
             else:
-                with st.chat_message(message["role"], avatar="Patient_Persona_Assets/User_Avatar.jpg"):
+                with st.chat_message(st.session_state.settings['assistant_name'], avatar=st.session_state.settings['assistant_avatar']):
                     st.markdown(message["content"])
 
         # Check if there's a manual input and process it
@@ -219,7 +196,7 @@ def main():
                 webm_file_path = "temp_audio.mp3"
                 with open(webm_file_path, "wb") as f:
                     f.write(audio_bytes)
-                transcript = speech_to_text(client_speech, webm_file_path)
+                transcript = speech_to_text(client, webm_file_path)
                 if transcript:
                     os.remove(webm_file_path)
                     user_query = transcript  # Ensure you extract the text from the transcript object correctly
@@ -236,28 +213,26 @@ def main():
 
             # Create a new thread if it does not exist
             if "thread_id" not in st.session_state:
-                thread = client_azure.beta.threads.create()
+                thread = client.beta.threads.create()
                 st.session_state.thread_id = thread.id
 
             # Display the user's query
-            with st.chat_message("user", avatar="Patient_Persona_Assets/Nurse_Avatar.png"):
+            with st.chat_message("user", avatar="assets/user.png"):
                 st.markdown(user_query)
 
             # Store the user's query into the history
-            st.session_state.chat_history.append({"role": "user", "content": user_query})
-            role = 'Student Nurse'
-            st.session_state.full_transcript.append(f"{role}: {user_query}")
+            st.session_state.messages.append({"role": "user", "content": user_query})
 
             # Add user query to the thread
-            client_azure.beta.threads.messages.create(
+            client.beta.threads.messages.create(
                 thread_id=st.session_state.thread_id,
                 role="user",
                 content=user_query
             )
 
             # Stream the assistant's reply
-            with st.chat_message("assistant", avatar="Patient_Persona_Assets/User_Avatar.jpg"):
-                stream = client_azure.beta.threads.runs.create(
+            with st.chat_message("assistant", avatar="assets/assistant.jpg"):
+                stream = client.beta.threads.runs.create(
                     thread_id=st.session_state.thread_id,
                     assistant_id=st.session_state.assistant_id,
                     instructions=st.session_state.assistant_instruction,
@@ -284,90 +259,38 @@ def main():
                         for content in event.data.delta.content:
                             if content.type == 'image_file':
                                 file_id = content.image_file.file_id
-                                image_data = client_azure.files.content(file_id)
+                                image_data = client.files.content(file_id)
                                 image_data_bytes = image_data.read()
                                 with open("my-image.png", "wb") as file:
                                     file.write(image_data_bytes)
                                 st.image("my-image.png")
 
                 # Once the stream is over, update chat history
-                st.session_state.chat_history.append({"role": "assistant", "content": assistant_reply})
-                role = 'Patient'
-                st.session_state.full_transcript.append(f"{role}: {assistant_reply}")
-
-                audio_file = text_to_speech(client_speech, assistant_reply)
-                autoplay_audio(audio_file)
+                st.session_state.messages.append({"role": "assistant", "content": assistant_reply})
+                if not st.session_state.end_session_button_clicked:
+                    audio_file = text_to_speech(client, assistant_reply)
+                    autoplay_audio(audio_file)
 
 
 
-    st.sidebar.warning('Please be advised that this patient simulation includes themes and discussions of substance use. This simulation might evoke strong emotions or may be distressing for individuals with personal experiences related to substance use or addiction. If you feel overwhelmed by the content, please discontinue the simulation and reach out to your course faculty, or schedule an appointment with [Northeastern University Health & Counseling Services](https://uhcs.northeastern.edu/). If you or someone you know is struggling with substance use or addiction, support is available.')
+    st.sidebar.warning(st.session_state.settings['warning'])
 
     # Button to show the download button
     if st.session_state.get("chat_active"):
         if st.session_state.end_session_button_clicked:
             st.button("End Session", disabled=True)
         else:
-            if st.session_state.get("full_transcript"):
+            if st.session_state.get("messages"):
                 if st.button("End Session"):
                     st.session_state.end_session_button_clicked = True
                     st.session_state["end_session_button"] = True
                     st.session_state.manual_input = "Goodbye. Thank you for coming."  # Set manual input
                     # Trigger the manual input immediately
-                    user_query = st.session_state.manual_input
-                    st.session_state.manual_input = None  # Clear manual input after use
-                    # Process the manual input as a regular chat input
-                    if "thread_id" not in st.session_state:
-                        thread = client_azure.beta.threads.create()
-                        st.session_state.thread_id = thread.id
-
-                    with st.chat_message("user", avatar="Patient_Persona_Assets/Nurse_Avatar.png"):
-                        st.markdown(user_query)
-
-                    st.session_state.chat_history.append({"role": "user", "content": user_query})
-                    role = 'Student Nurse'
-                    st.session_state.full_transcript.append(f"{role}: {user_query}")
-
-                    client_azure.beta.threads.messages.create(
-                        thread_id=st.session_state.thread_id,
-                        role="user",
-                        content=user_query
-                    )
-
-                    with st.chat_message("assistant", avatar="Patient_Persona_Assets/User_Avatar.jpg"):
-                        stream = client_azure.beta.threads.runs.create(
-                            thread_id=st.session_state.thread_id,
-                            assistant_id=st.session_state.assistant_id,
-                            instructions=st.session_state.assistant_instruction,
-                            stream=True,
-                        )
-
-                        assistant_reply_box = st.empty()
-                        assistant_reply = ""
-
-                        for event in stream:
-                            if isinstance(event, ThreadMessageDelta):
-                                if isinstance(event.data.delta.content[0], TextDeltaBlock):
-                                    assistant_reply_box.empty()
-                                    assistant_reply += event.data.delta.content[0].text.value
-                                    assistant_reply_box.markdown(assistant_reply)
-                            if event.data.object == "thread.message.delta":
-                                for content in event.data.delta.content:
-                                    if content.type == 'image_file':
-                                        file_id = content.image_file.file_id
-                                        image_data = client_azure.files.content(file_id)
-                                        image_data_bytes = image_data.read()
-                                        with open("my-image.png", "wb") as file:
-                                            file.write(image_data_bytes)
-                                        st.image("my-image.png")
-
-                        st.session_state.chat_history.append({"role": "assistant", "content": assistant_reply})
-                        role = 'Patient'
-                        st.session_state.full_transcript.append(f"{role}: {assistant_reply}")
+                    st.rerun()
 
     # Check if there's a transcript to download
-    if st.session_state.get("full_transcript") and st.session_state.get("end_session_button"):
-        full_transcript_text = "\n".join(st.session_state.full_transcript)
-        word_buffer = create_transcript_word(st.session_state.full_transcript)
+    if st.session_state.get("end_session_button"):
+        word_buffer = create_transcript_word()
 
         col1, col2 = st.columns([1, 1])
         # Button to download the full conversation transcript
