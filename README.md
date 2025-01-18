@@ -1,6 +1,6 @@
 # AI Sim Bot
 
-Revolutionizing nursing education through AI-powered virtual patient systems.
+Revolutionizing education through AI-powered virtual patient systems.
 
 ## Overview
 
@@ -17,26 +17,31 @@ The **Patient Persona Chatbot** is an innovative project designed to enhance nur
 - **Performance Feedback**: Offers immediate evaluations and feedback to students, enabling precise skill development.
 - **Transcript Downloads**: Allows students to download a complete conversation with the virtual patient as a PDF.
 
-## Installation
+## Setup
 
-1. [Create an account](https://github.com/signup) on Github.com.
-2. [Create an account](https://platform.openai.com/api-keys) on OpenAI.com.
+1. [Create an account](https://platform.openai.com/api-keys) on OpenAI.com.
     * [Generate an API key]((https://platform.openai.com/api-keys))
     * Make sure to write down the key because you won't be able to see it again.
+    * You can always delete and create another one.
+2. [Create an account](https://github.com/signup) on Github.com.
+    * [Fork this project.](https://github.com/AISimBot/AISimBot/fork)
+    * Give it a name and click "Create fork."
+    * Save the URL to the forked repository.
 3. [Create an account](https://streamlit.app/) on Streamlit.app.
     * Click "Create an app"
     * Select "Deploy from repo"
     * Type the url for your forked repository.
     * Give a unique and memorable URL for your app.
     * Choose Advanced settings.
-    * Under the secrets provide your OpenAI API key with the exact format below.
+    * Under the secrets, provide your OpenAI API key as well as the password to access the app with the exact format below.
     * Choose save and click deploy.
 
 ```toml
 OPENAI_API_KEY = "xxxxxx"
+password = "abcd1234"
 ```
 
-Changing secrets takes around a few minutes to propagate, so most likely you'll get an error about key not found. Wait for a few minutes, and reboot the app.
+Saving secrets takes a few minutes to propagate, so most likely you'll get an error messsage about missing key. Wait for a few minutes, and reboot the app under "Manage app."
 
 If you still get the same error, make sure you can find the key in the [app settings > Secrets.](https://docs.streamlit.io/deploy/streamlit-community-cloud/deploy-your-app/secrets-management)
 

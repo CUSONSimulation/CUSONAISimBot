@@ -9,9 +9,35 @@ from openai.types.beta.assistant_stream_event import ThreadMessageDelta
 from openai.types.beta.threads.text_delta_block import TextDeltaBlock
 from docx import Document
 import tomllib
+import hmac
 import warnings
 
+
 warnings.filterwarnings("ignore", category=DeprecationWarning)
+
+
+def check_password():
+    """Returns `True` if the user had the correct password."""
+
+    def password_entered():
+        """Checks whether a password entered by the user is correct."""
+        if hmac.compare_digest(st.session_state["password"], st.secrets["password"]):
+            st.session_state["password_correct"] = True
+            del st.session_state["password"]  # Don't store the password.
+        else:
+            st.session_state["password_correct"] = False
+
+    # Return True if the password is validated.
+    if st.session_state.get("password_correct", False):
+        return True
+
+    # Show input for password.
+    with st.form("Credentials"):
+        st.text_input("Access Code", type="password", key="password")
+        st.form_submit_button("Start Chat", on_click=password_entered)
+    if "password_correct" in st.session_state:
+        st.error("😕 Invalid Code")
+    return False
 
 
 def load_settings():
@@ -129,9 +155,8 @@ def main():
     # Button to start the chat session
     col1, col2, col3 = st.sidebar.columns([1, 1, 1])
     with col2:
-        if st.button("Start Chat"):
+        if check_password():
             st.session_state["chat_active"] = True
-            st.session_state.messages = []
             st.session_state.show_text = (
                 False  # Hide the text when Start Chat is pressed
             )
@@ -151,6 +176,7 @@ def main():
 
         for message in st.session_state.messages:
             if message["role"] == "user":
+                print(message["content"])
                 with st.chat_message(
                     st.session_state.settings["user_name"],
                     avatar=st.session_state.settings["user_avatar"],
@@ -219,7 +245,10 @@ def main():
                 st.session_state.thread_id = thread.id
 
             # Display the user's query
-            with st.chat_message("user", avatar="assets/user.png"):
+            with st.chat_message(
+                st.session_state.settings["user_name"],
+                avatar=st.session_state.settings["user_avatar"],
+            ):
                 st.markdown(user_query)
 
             # Store the user's query into the history
@@ -231,7 +260,10 @@ def main():
             )
 
             # Stream the assistant's reply
-            with st.chat_message("assistant", avatar="assets/assistant.jpg"):
+            with st.chat_message(
+                st.session_state.settings["assistant_name"],
+                avatar=st.session_state.settings["assistant_avatar"],
+            ):
                 stream = client.beta.threads.runs.create(
                     thread_id=st.session_state.thread_id,
                     assistant_id=st.session_state.assistant_id,
