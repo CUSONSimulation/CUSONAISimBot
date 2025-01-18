@@ -133,7 +133,7 @@ def main():
 
     st.title(st.session_state.settings["title"])
 
-    st.sidebar.header("Chat with your Patient")
+    st.sidebar.header("Chat with " + st.session_state.settings["assistant_name"])
     container1 = st.sidebar.container(border=True)
     with container1:
         for key, val in st.session_state.settings["instruction"]["user"].items():
@@ -316,7 +316,7 @@ def main():
             st.download_button(
                 label="Download Transcript",
                 data=word_buffer,
-                file_name="Nurse_Patient_Full_Transcript.docx",
+                file_name="Transcript.docx",
                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             )
 
