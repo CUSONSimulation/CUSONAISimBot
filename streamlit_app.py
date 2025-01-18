@@ -69,11 +69,14 @@ def local_css(file_name):
 
 
 def speech_to_text(client, audio_data):
-    with open(audio_data, "rb") as audio_file:
-        transcript = client.audio.transcriptions.create(
-            model="whisper-1", response_format="text", file=audio_file
-        )
-    return transcript
+    try:
+        with open(audio_data, "rb") as audio_file:
+            transcript = client.audio.transcriptions.create(
+                model="whisper-1", response_format="text", file=audio_file
+            )
+            return transcript
+    except:
+        return
 
 
 def text_to_speech(client, input_text):
@@ -213,26 +216,25 @@ def main():
             if (
                 audio_bytes
                 and audio_bytes != st.session_state.processed_audio
-                and audio_bytes
-                != b"RIFF,\x00\x00\x00WAVEfmt \x10\x00\x00\x00\x01\x00\x02\x00\x80\xbb\x00\x00\x00\xee\x02\x00\x04\x00\x10\x00data\x00\x00\x00\x00"
+                # and audio_bytes
+                # != b"RIFF,\x00\x00\x00WAVEfmt \x10\x00\x00\x00\x01\x00\x02\x00\x80\xbb\x00\x00\x00\xee\x02\x00\x04\x00\x10\x00data\x00\x00\x00\x00"
             ):
                 webm_file_path = "temp_audio.mp3"
                 with open(webm_file_path, "wb") as f:
                     f.write(audio_bytes)
                 transcript = speech_to_text(client, webm_file_path)
+                os.remove(webm_file_path)
                 if transcript:
-                    os.remove(webm_file_path)
                     user_query = transcript  # Ensure you extract the text from the transcript object correctly
                     st.session_state.processed_audio = (
                         audio_bytes  # Update the processed audio state
                     )
-
-            if (
-                audio_bytes
-                == b"RIFF,\x00\x00\x00WAVEfmt \x10\x00\x00\x00\x01\x00\x02\x00\x80\xbb\x00\x00\x00\xee\x02\x00\x04\x00\x10\x00data\x00\x00\x00\x00"
-            ):
-                st.error("Something went wrong. Kindly refresh the page and try again.")
-                st.stop()
+            # if (
+            #    audio_bytes
+            #    == b"RIFF,\x00\x00\x00WAVEfmt \x10\x00\x00\x00\x01\x00\x02\x00\x80\xbb\x00\x00\x00\xee\x02\x00\x04\x00\x10\x00data\x00\x00\x00\x00"
+            # ):
+            #     st.error("Something went wrong. Kindly refresh the page and try again.")
+            #     st.stop()
 
         if user_query:
             if user_query.lower() == "exit":
