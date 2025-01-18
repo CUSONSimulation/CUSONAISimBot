@@ -44,24 +44,6 @@ def load_settings():
     return tomllib.load(open("settings.toml", "rb"))
 
 
-def get_assistant(client):
-    name = st.session_state.settings["title"]
-    print("Getting assistant:", name)
-    has_more = True
-    after = None
-    while has_more == True:
-        assistants = client.beta.assistants.list(after=after)
-        for assistant in assistants.data:
-            if assistant.name == name:
-                return assistant.id
-        has_more = assistants.has_more
-        after = assistants.last_id
-
-        # Can't find, create a new one
-    assistant = client.beta.assistants.create(name=name, model="gpt-4o")
-    return assistant.id
-
-
 @st.cache_data
 def local_css(file_name):
     with open(file_name) as f:
@@ -109,7 +91,7 @@ def create_transcript_word():
     doc = Document()
     doc.add_heading("Conversation Transcript\n", level=1)
 
-    for message in st.session_state.messages:
+    for message in st.session_state.messages[1:]:
         if message["role"] == "user":
             p = doc.add_paragraph()
             p.add_run(st.session_state.settings["user_name"] + ": ").bold = True
@@ -132,14 +114,10 @@ def main():
     client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
     if "settings" not in st.session_state:
         st.session_state.settings = load_settings()
-    if "assistant_id" not in st.session_state:
-        st.session_state.assistant_id = get_assistant(client)
-    if "assistant_instruction" not in st.session_state:
-        st.session_state.assistant_instruction = st.session_state.settings[
-            "instruction"
-        ]
     if "messages" not in st.session_state:
-        st.session_state.messages = []
+        st.session_state.messages = [
+            {"role": "system", "content": st.session_state.settings["instruction"]}
+        ]
     if "manual_input" not in st.session_state:
         st.session_state.manual_input = None  # Add this line to initialize manual input
     if "end_session_button_clicked" not in st.session_state:
@@ -182,9 +160,8 @@ def main():
     if st.session_state.get("chat_active"):
         st.sidebar.header("Speech Input")
 
-        for message in st.session_state.messages:
+        for message in st.session_state.messages[1:]:
             if message["role"] == "user":
-                print(message["content"])
                 with st.chat_message(
                     st.session_state.settings["user_name"],
                     avatar=st.session_state.settings["user_avatar"],
@@ -246,11 +223,6 @@ def main():
                 st.session_state["chat_active"] = False
                 st.stop()
 
-            # Create a new thread if it does not exist
-            if "thread_id" not in st.session_state:
-                thread = client.beta.threads.create()
-                st.session_state.thread_id = thread.id
-
             # Display the user's query
             with st.chat_message(
                 st.session_state.settings["user_name"],
@@ -261,20 +233,15 @@ def main():
             # Store the user's query into the history
             st.session_state.messages.append({"role": "user", "content": user_query})
 
-            # Add user query to the thread
-            client.beta.threads.messages.create(
-                thread_id=st.session_state.thread_id, role="user", content=user_query
-            )
-
             # Stream the assistant's reply
             with st.chat_message(
                 st.session_state.settings["assistant_name"],
                 avatar=st.session_state.settings["assistant_avatar"],
             ):
-                stream = client.beta.threads.runs.create(
-                    thread_id=st.session_state.thread_id,
-                    assistant_id=st.session_state.assistant_id,
-                    instructions=st.session_state.assistant_instruction,
+                stream = client.chat.completions.create(
+                    model=st.session_state.settings["parameters"]["model"],
+                    messages=st.session_state.messages,
+                    temperature=st.session_state.settings["parameters"]["temperature"],
                     stream=True,
                 )
 
@@ -285,24 +252,10 @@ def main():
                 assistant_reply = ""
 
                 # Iterate through the stream
-                for event in stream:
-                    if isinstance(event, ThreadMessageDelta):
-                        if isinstance(event.data.delta.content[0], TextDeltaBlock):
-                            # empty the container
-                            assistant_reply_box.empty()
-                            # add the new text
-                            assistant_reply += event.data.delta.content[0].text.value
-                            # display the new text
-                            assistant_reply_box.markdown(assistant_reply)
-                    if event.data.object == "thread.message.delta":
-                        for content in event.data.delta.content:
-                            if content.type == "image_file":
-                                file_id = content.image_file.file_id
-                                image_data = client.files.content(file_id)
-                                image_data_bytes = image_data.read()
-                                with open("my-image.png", "wb") as file:
-                                    file.write(image_data_bytes)
-                                st.image("my-image.png")
+                for chunk in stream:
+                    if chunk.choices[0].delta.content is not None:
+                        assistant_reply += chunk.choices[0].delta.content
+                        assistant_reply_box.markdown(assistant_reply)
 
                 # Once the stream is over, update chat history
                 st.session_state.messages.append(
