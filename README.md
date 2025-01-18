@@ -55,6 +55,21 @@ In order to test to make sure everything works:
 
 Together, let's improve education through technology!
 
+## Customize
+
+* Go to your forked repository on Github.
+* Under files, select settings.toml.
+* Click edit file.
+* Edit the content and click commit changes... See below for more information.
+* Give short title and description for your changes for reference and click commit changes.
+
+The setting file uses [TOML](https://toml.io/en/) format. For multiline field, surround the text with `'''`. You can also use [Markdown](https://www.markdownguide.org/getting-started/) to format how they appear.
+
+* Intro appears before start chatting.
+* instruction field is the prompt sent to the model.
+* The `[sidebar]` section has fields that would appear on the sidebar.
+* You can change avatars by replacing the appropriate files in assets folder.
+
 ## Technologies Used
 
 - **[Streamlit](https://streamlit.io/)**: For building an interactive user interface.
