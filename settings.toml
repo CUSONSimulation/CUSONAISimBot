@@ -133,10 +133,13 @@ In addition, provide feedback on the nurse's use of therapeutic communication te
 
 [sidebar]
 Avatar = "assets/Jordan.jpg"
-Name = "Jordan Taylor"
-Age = "17"
-Gender = "Non-binary"
-Visit_Reason = "Routine physical exam required for school sports participation."
+profile = '''
+
+* Name: Jordan Taylor
+* Age: 17
+* Gender: Non-binary
+* Visit Reason: Routine physical exam required for school sports participation.
+'''
 
 [parameters]
 model = "gpt-4o"

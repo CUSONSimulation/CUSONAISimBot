@@ -14,28 +14,13 @@ import io
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 
-def check_password():
-    """Returns `True` if the user had the correct password."""
-
-    def password_entered():
-        """Checks whether a password entered by the user is correct."""
-        if hmac.compare_digest(st.session_state["password"], st.secrets["password"]):
-            st.session_state["password_correct"] = True
-            del st.session_state["password"]  # Don't store the password.
-        else:
-            st.session_state["password_correct"] = False
-
-    # Return True if the password is validated.
-    if st.session_state.get("password_correct", False):
-        return True
-
-    # Show input for password.
-    with st.form("Credentials"):
-        st.text_input("Access Code", type="password", key="password")
-        st.form_submit_button("Start Chat", on_click=password_entered)
-    if "password_correct" in st.session_state:
-        st.error("😕 Invalid Code")
-    return False
+def password_entered():
+    """Checks whether a password entered by the user is correct."""
+    if hmac.compare_digest(st.session_state["password"], st.secrets["password"]):
+        st.session_state["password_correct"] = True
+        del st.session_state["password"]  # Don't store the password.
+    else:
+        st.session_state["password_correct"] = False
 
 
 def load_settings():
@@ -131,21 +116,27 @@ def main():
                 st.subheader(f"{key.replace("_", " ")}: {val}")
 
     # Button Login
-    col1, col2, col3 = st.sidebar.columns([1, 1, 1])
-    with col2:
-        if check_password():
-            st.session_state["chat_active"] = True
-            st.session_state.show_text = (
-                False  # Hide the text when Start Chat is pressed
-            )
+    if (
+        st.session_state.get("password_correct", False)
+        and st.session_state.password_correct
+    ):
+        st.session_state["chat_active"] = True
+        st.session_state.show_text = False  # Hide the text when Start Chat is pressed
+    else:
+        st.sidebar.header("Access Code")
+        with st.sidebar.container(border=True):
+            with st.form("Credentials"):
+                st.text_input("Access Code", type="password", key="password")
+                st.form_submit_button("Start Chat", on_click=password_entered)
+            if "password_correct" in st.session_state:
+                st.error("😕 Invalid Code")
 
     # Display text before Start Chat is pressed
     if "show_text" not in st.session_state:
         st.session_state.show_text = True
 
     if st.session_state.show_text:
-        container2 = st.container(border=True)
-        with container2:
+        with st.container(border=True):
             st.markdown(st.session_state.settings["intro"])
 
     # Check if chat is active
@@ -178,10 +169,8 @@ def main():
                     "Click 'End Session' Button to Receive Feedback and Download Transcript."
                 )
 
-        # Create footer container for the microphone
-        footer_container = st.sidebar.container(border=True)
-
-        with footer_container:
+        # Create container for the microphone
+        with st.sidebar.container(border=True):
             audio = mic_recorder(
                 start_prompt="Record",
                 stop_prompt="Stop",
@@ -190,21 +179,18 @@ def main():
                 format="webm",
                 key="recorder",
             )
-            # Check if there is a new audio recording and it has not been processed yet
-            if audio and audio["id"] != st.session_state.processed_audio:
-                audio_bio = io.BytesIO(audio["bytes"])
-                audio_bio.name = "audio.webm"
-                transcript = speech_to_text(client, audio_bio)
 
-                if transcript:
-                    user_query = transcript  # Ensure you extract the text from the transcript object correctly
-                    st.session_state.processed_audio = audio["id"]
+        # Check if there is a new audio recording and it has not been processed yet
+        if audio and audio["id"] != st.session_state.processed_audio:
+            audio_bio = io.BytesIO(audio["bytes"])
+            audio_bio.name = "audio.webm"
+            transcript = speech_to_text(client, audio_bio)
+
+            if transcript:
+                user_query = transcript  # Ensure you extract the text from the transcript object correctly
+                st.session_state.processed_audio = audio["id"]
 
         if user_query:
-            if user_query.lower() == "exit":
-                st.session_state["chat_active"] = False
-                st.stop()
-
             # Display the user's query
             with st.chat_message(
                 st.session_state.settings["user_name"],
