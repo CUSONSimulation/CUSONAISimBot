@@ -176,7 +176,7 @@ def main():
                 stop_prompt="Stop",
                 just_once=False,
                 use_container_width=True,
-                format="webm",
+                format="wav",
                 key="recorder",
             )
 
