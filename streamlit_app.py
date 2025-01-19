@@ -111,7 +111,7 @@ def main():
     with container1:
         for key, val in st.session_state.settings["sidebar"].items():
             if re.search(r"(jpg|png|webp)$", val):
-                st.image(val, caption=key.replace("_", " "))
+                st.image(val)
             else:
                 st.subheader(f"{key.replace("_", " ")}: {val}")
 
@@ -141,8 +141,6 @@ def main():
 
     # Check if chat is active
     if st.session_state.get("chat_active"):
-        st.sidebar.header("Speech Input")
-
         for message in st.session_state.messages[1:]:
             if message["role"] == "user":
                 with st.chat_message(
@@ -172,8 +170,8 @@ def main():
         # Create container for the microphone
         with st.sidebar.container(border=True):
             audio = mic_recorder(
-                start_prompt="Record",
-                stop_prompt="Stop",
+                start_prompt="🎙 Record",
+                stop_prompt="📤 Stop",
                 just_once=False,
                 use_container_width=True,
                 format="wav",
@@ -259,7 +257,7 @@ def main():
         # Button to download the full conversation transcript
         with col1:
             st.download_button(
-                label="Download Transcript",
+                label="📥 Download Transcript",
                 data=word_buffer,
                 file_name="Transcript.docx",
                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
