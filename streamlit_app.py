@@ -63,6 +63,23 @@ def autoplay_audio(audio_data):
     st.markdown(md, unsafe_allow_html=True)
 
 
+# Send prompt and get response
+def stream_response(client, messages):
+    try:
+        stream = client.chat.completions.create(
+            model=st.session_state.settings["parameters"]["model"],
+            messages=messages,
+            temperature=st.session_state.settings["parameters"]["temperature"],
+            stream=True,
+        )
+        for chunk in stream:
+            if chunk.choices[0].delta.content is not None:
+                yield chunk.choices[0].delta.content
+    except Exception as e:
+        print("Stream_response:", e)
+        return
+
+
 # Function to generate Word document from the transcript
 def create_transcript_word():
     doc = Document()
@@ -206,13 +223,6 @@ def main():
                 st.session_state.settings["assistant_name"],
                 avatar=st.session_state.settings["assistant_avatar"],
             ):
-                stream = client.chat.completions.create(
-                    model=st.session_state.settings["parameters"]["model"],
-                    messages=st.session_state.messages,
-                    temperature=st.session_state.settings["parameters"]["temperature"],
-                    stream=True,
-                )
-
                 # Empty container to display the assistant's reply
                 assistant_reply_box = st.empty()
 
@@ -220,10 +230,9 @@ def main():
                 assistant_reply = ""
 
                 # Iterate through the stream
-                for chunk in stream:
-                    if chunk.choices[0].delta.content is not None:
-                        assistant_reply += chunk.choices[0].delta.content
-                        assistant_reply_box.markdown(assistant_reply)
+                for chunk in stream_response(client, st.session_state.messages):
+                    assistant_reply += chunk
+                    assistant_reply_box.markdown(assistant_reply)
 
                 # Once the stream is over, update chat history
                 st.session_state.messages.append(
