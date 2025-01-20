@@ -1,8 +1,13 @@
 title = "AI SimBot"
+error_message = "😞 Oops! An unexpected error occurred. Please try again. If the error persists, please contact the administrator."
 user_name = "Nurse"
 user_avatar = "assets/User.png"
 assistant_name = "Jordan"
 assistant_avatar = "assets/Assistant.jpg"
+
+
+#--------------------
+
 
 intro = '''
 ## Welcome to Dr. Kim’s AI SimBot.
@@ -131,12 +136,19 @@ In addition, provide feedback on the nurse's use of therapeutic communication te
     - Constructive: 'Pay closer attention to Jordan's verbal cues to better tailor your responses.'
 '''
 
+
+#--------------------
+
+
 [sidebar]
 Avatar = "assets/Jordan.jpg"
 Name = "Jordan Taylor"
 Age = "17"
 Gender = "Non-binary"
 Visit_Reason = "Routine physical exam required for school sports participation."
+
+
+#--------------------
 
 
 [parameters]
