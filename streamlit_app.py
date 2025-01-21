@@ -176,6 +176,7 @@ def setup_sidebar():
     if "password_correct" in st.session_state and st.session_state.password_correct:
         st.session_state.chat_active = True
         st.session_state.show_intro = False
+        autoplay_audio(open("assets/unlock.mp3", "rb").read())
     else:
         st.sidebar.header("Access Code")
         with st.sidebar.container(border=True):
