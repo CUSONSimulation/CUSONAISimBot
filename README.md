@@ -4,7 +4,7 @@ Education through AI-Powered Simulations
 
 ## Overview
 
-The AI SimBot is a cutting-edge tool designed to enhance educational experiences through realistic verbal interaction simulations. Initially created for nursing students to practice the CRAFFT, a screening tool for identifying substance use among youth, it now offers customizable settings for a wide range of educational and professional contexts focused on role-playing and communication skills.
+AI SimBot is a cutting-edge tool designed to enhance clinical educational experiences through realistic communication simulations. Initially created for prelicensure nursing students at Northeastern University to practice administering the CRAFFT, a screening tool for identifying substance use among youth, it now offers customizable settings for a wide range of educational and professional contexts focused on role-playing and communication skills.
 
 ### Key Features
 
@@ -40,6 +40,7 @@ https://github.com/user-attachments/assets/ad79cd24-13ff-492a-9de3-059b10e470fe
    - [Generate an API key](https://platform.openai.com/api-keys).  
    - Write down your key, as it will not be shown again.  
    - You can delete and create a new key if needed.  
+   - [Purchase credits](https://help.openai.com/en/articles/8264644-how-can-i-set-up-prepaid-billing) for API use. It may takes a few hours for API to be active.
 
 2. [Create a GitHub account](https://github.com/signup).  
    - [Fork this project](https://github.com/AISimBot/AISimBot/fork).  
