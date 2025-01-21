@@ -30,6 +30,10 @@ The AI SimBot is a cutting-edge tool designed to enhance educational experiences
 - Flexibility: Customize scenarios to meet specific educational or professional goals.
 - Cost-Effectiveness: Replace costly and time-intensive role-playing exercises with a digital solution.
 
+## Demo
+
+https://github.com/user-attachments/assets/ad79cd24-13ff-492a-9de3-059b10e470fe
+
 ## Setup
 
 1. [Create an OpenAI account](https://platform.openai.com/api-keys).  
@@ -85,6 +89,36 @@ The `settings.toml` file uses [TOML](https://toml.io/en/) format. For multiline 
 To update avatars, replace the relevant files in the `assets` folder.
 
 **IMPORTANT**: After commit changes, you need to reboot your Streamlit app from the dropdown menu under Manage App.
+
+### Importance of Prompt
+
+The instruction field in the settings is the most critical component of the AI SimBot, as it directly shapes the quality and relevance of the user experience.
+
+1. Be Clear and Specific: Clearly define the AI's role, purpose, and behavior to minimize ambiguity.  
+   - Example: *"You are Jordan, a 17-year-old non-binary high school student visiting a pediatric office for a routine physical. Speak naturally and respond based on the provided patient background."*
+
+2. Provide Sufficient Context: Offer background details to help the AI generate relevant and realistic responses.  
+   - Example: *"Jordan has started using substances occasionally to cope with academic and social pressures and feels nervous about the CRAFFT screening due to concerns about judgment and confidentiality."*
+
+3. Guide Behavior with Clear Instructions: Specify how the AI should behave in different scenarios.  
+   - Example: *"Begin the conversation feeling nervous and guarded. Gradually open up if the nurse is empathetic and supportive. If the nurse is judgmental, withdraw emotionally and respond defensively."*
+
+4. Use Step-by-Step Instructions: Break down tasks into smaller, manageable steps for the AI to follow.  
+   - Example: *"Start the conversation with an introduction. Respond to the nurse’s questions using short, vague answers at first. Adjust your emotional openness based on the nurse’s tone."*
+
+5. Define Boundaries: Set clear limits on what the AI should avoid or omit.  
+   - Example: *"Do not ask any questions. Do not mention the CRAFFT manual. If the nurse asks something outside your scope, respond with, 'I’m not aware of that.'"*
+
+6. Incorporate Examples for Clarity: Provide sample responses to illustrate the desired behavior.  
+   - Example: *"When nervous, say things like, 'It’s not a big deal,' or 'I only do it sometimes.' If the nurse is empathetic, you might say, 'Sometimes I just need an escape.' If they are judgmental, respond with, 'Can we stop now?' or 'I think I’m done here.'"*
+
+7. Encourage Realism and Consistency: Make the AI’s responses more engaging and authentic.  
+   - Example: *"Use casual Gen Z slang like 'low-key,' 'vibe,' or 'no cap' to sound like a typical teenager. Reflect Jordan’s emotions and background in every response."*
+
+8. Iterate and Test for Improvements: Continuously test and refine the prompt to ensure it delivers the desired outcomes.  
+   - Insight: Tuning the prompt for CRAFFT practice required multiple rounds of iterative testing with graduate-level nursing students to optimize the SimBot's performance.
+
+For more information, check out [Prompt Engineering Guide](https://platform.openai.com/docs/guides/prompt-engineering) by OpenAI.
 
 ## Technologies Used
 
