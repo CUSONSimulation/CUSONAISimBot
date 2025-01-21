@@ -1,80 +1,109 @@
 # AI Sim Bot
 
-Revolutionizing education through AI-powered virtual patient systems.
+Education through AI-Powered Simulations
 
 ## Overview
 
-The **Patient Persona Chatbot** is an innovative project designed to enhance nursing education by simulating realistic patient interactions. This AI-powered tool replaces traditional actor-based patient training with a more scalable, cost-effective, and flexible solution. It provides nursing students with diverse learning experiences while improving the quality and efficiency of their training.
+The AI SimBot is a cutting-edge tool designed to enhance educational experiences through realistic verbal interaction simulations. Initially created for nursing students to practice the CRAFFT, a screening tool for identifying substance use among youth, it now offers customizable settings for a wide range of educational and professional contexts focused on role-playing and communication skills.
 
 ### Key Features
 
-- **Patient Simulation**: Simulates patients with varied backgrounds to help nursing students identify:
-  - Substance use
-  - Substance-related riding/driving risk
-  - Substance use disorder (ages 12-21)
-- **CRAFFT Manual Integration**: Students follow the CRAFFT manual to assess patient substance use problems.
-- **Customizable Scenarios**: Nursing instructors can tailor patient histories and scenarios to meet specific educational goals.
-- **Performance Feedback**: Offers immediate evaluations and feedback to students, enabling precise skill development.
-- **Transcript Downloads**: Allows students to download a complete conversation with the virtual patient as a PDF.
+- Customizable Scenarios: Adaptable for various disciplines and learning objectives, including:
+  - Communication skills
+  - Interviewing techniques
+  - Role-playing scenarios
+  - Verbal interaction practice
+
+- Flexible Role-Playing: Supports diverse applications, such as:
+  - Scenario-based learning in healthcare, social work, law, and more
+  - Educational role-plays (e.g., teacher-student, counselor-client, or peer mediation)
+  - Professional training (e.g., job interviews, customer service, or team communication)
+
+- Real-Time Feedback: Provides instant evaluations and feedback to refine user skills effectively.
+
+- Transcript Downloads: Allows users to save a complete transcript of the interaction as a Word document for review, reflection, or documentation.
+
+### Benefits
+
+- Accessibility: Practice anytime, anywhere, without the need for live actors or physical spaces.
+- Scalability: Support diverse learners and training needs.
+- Flexibility: Customize scenarios to meet specific educational or professional goals.
+- Cost-Effectiveness: Replace costly and time-intensive role-playing exercises with a digital solution.
 
 ## Setup
 
-1. [Create an account](https://platform.openai.com/api-keys) on OpenAI.com.
-    * [Generate an API key]((https://platform.openai.com/api-keys))
-    * Make sure to write down the key because you won't be able to see it again.
-    * You can always delete and create another one.
-2. [Create an account](https://github.com/signup) on Github.com.
-    * [Fork this project.](https://github.com/AISimBot/AISimBot/fork)
-    * Give it a name and click "Create fork."
-    * Save the URL to the forked repository.
-3. [Create an account](https://streamlit.app/) on Streamlit.app.
-    * Click "Create an app"
-    * Select "Deploy from repo"
-    * Type the url for your forked repository.
-    * Give a unique and memorable URL for your app.
-    * Choose Advanced settings.
-    * Under the secrets, provide your OpenAI API key as well as the password to access the app with the exact format below.
-    * Choose save and click deploy.
+1. [Create an OpenAI account](https://platform.openai.com/api-keys).  
+   - [Generate an API key](https://platform.openai.com/api-keys).  
+   - Write down your key, as it will not be shown again.  
+   - You can delete and create a new key if needed.  
 
-```toml
-OPENAI_API_KEY = "xxxxxx"
-password = "abcd1234"
-```
+2. [Create a GitHub account](https://github.com/signup).  
+   - [Fork this project](https://github.com/AISimBot/AISimBot/fork).  
+   - Name your fork and click **Create fork**.  
+   - Save the URL for your forked repository.  
 
-Saving secrets takes a few minutes to propagate, so most likely you'll get an error messsage about missing key. Wait for a few minutes, and reboot the app under "Manage app."
+3. [Create a Streamlit account](https://streamlit.app/).  
+   - Click **Create an app**.  
+   - Select **Deploy from repo**.  
+   - Enter the URL of your forked repository.  
+   - Provide a unique and memorable URL for your app.  
+   - Choose **Advanced settings**, and under **Secrets**, add your OpenAI API key and app password in the following format:  
 
-If you still get the same error, make sure you can find the key in the [app settings > Secrets.](https://docs.streamlit.io/deploy/streamlit-community-cloud/deploy-your-app/secrets-management)
+   ```toml
+   OPENAI_API_KEY = "your_openai_api_key"
+   password = "your_app_password"
+   ```
 
-Once everything goes well, you'll see the user interface.
+   - Click **Save** and then **Deploy**.
 
-In order to test to make sure everything works:
-1. Click Share and get the link for your app.
-2. Either log out from Sstreamlit or open the link in a private browsing window.
-    * Chrome, Safari, Edge: Ctrl-Shift-N (Windows) or Command-Shift-N (macOS)
-    * Firefox: Ctrl-Shift-P (Windows) or Command-Shift-P (macOS)---
+> **Note:** Secrets may take a few minutes to propagate. If you see an error about a missing key, wait a few minutes and then reboot your app under **Manage app**.  
 
-Together, let's improve education through technology!
+If the issue persists, confirm that the key appears under **App settings > Secrets**.  
+Once set up correctly, you’ll see the app interface.
 
-## Customize
+### Testing Your App
 
-* Go to your forked repository on Github.
-* Under files, select settings.toml.
-* Click edit file.
-* Edit the content and click commit changes... See below for more information.
-* Give short title and description for your changes for reference and click commit changes.
+1. Click **Share** to get your app link.  
+2. Open the link in a private browsing window or log out of Streamlit.  
+   - **Shortcut keys:**  
+     - Chrome, Safari, Edge: `Ctrl-Shift-N` (Windows) or `Command-Shift-N` (Mac).  
+     - Firefox: `Ctrl-Shift-P` (Windows) or `Command-Shift-P` (Mac).
 
-The setting file uses [TOML](https://toml.io/en/) format. For multiline field, surround the text with `'''`. You can also use [Markdown](https://www.markdownguide.org/getting-started/) to format how they appear.
+### Customize
 
-* Intro appears before start chatting.
-* instruction field is the prompt sent to the model.
-* The `[sidebar]` section has fields that would appear on the sidebar.
-* You can change avatars by replacing the appropriate files in assets folder.
+1. Go to your forked repository on GitHub.  
+2. Navigate to the `settings.toml` file and click **Edit file**.  
+3. Update the file content as needed and click **Commit changes**.  
+   - Add a short, descriptive title and summary for your changes.  
+
+The `settings.toml` file uses [TOML](https://toml.io/en/) format. For multiline fields, enclose text in `'''`. You can also use [Markdown](https://www.markdownguide.org/getting-started/) for formatting.
+
+- **Intro**: Displays before users start chatting.  
+- **Instruction**: Defines the initial prompt sent to the model.  
+- **Sidebar**: Contains fields that appear on the app’s sidebar.  
+
+To update avatars, replace the relevant files in the `assets` folder.
+
+**IMPORTANT**: After commit changes, you need to reboot your Streamlit app from the dropdown menu under Manage App.
 
 ## Technologies Used
 
-- **[Streamlit](https://streamlit.io/)**: For building an interactive user interface.
-- **OpenAI Assistant API**: Powers the chatbot's natural language processing capabilities.
+- [Streamlit](https://streamlit.io/): For building an interactive user interface.
+- OpenAI API: For text generation through GPT-4o (large language model), text to speech, and speech to text ((Whisper.)
 
+## Potential Use Cases
+
+The AI SimBot’s versatility makes it valuable for:
+
+- Healthcare and Counseling Training: Practice patient-provider communication and diagnostic skills.
+- Youth Development Programs: Role-play scenarios like peer mediation, bullying intervention, or leadership development.
+- Cross-Cultural Communication: Improve interactions in diverse cultural contexts.
+- Education and Teaching: Prepare for classroom scenarios, student counseling.
+- Language Learning: Build conversational fluency and cultural competence.
+- Legal Practice: Practice depositions, client consultations, or courtroom questioning.
+- Law Enforcement Training: Simulate suspect or witness interviews to sharpen investigative skills.
+- Sales and Marketing: Enhance client interaction techniques for persuasion and negotiation.
+- Corporate Training: Improve job interview skills, customer service, conflict resolution, and team communication.
 
 ## Contributers
 
