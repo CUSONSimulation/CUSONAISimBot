@@ -76,7 +76,7 @@ def speech_to_text(client, audio):
 def text_to_speech(client, input_text):
     try:
         response = client.audio.speech.create(
-            model="tts-1", voice="nova", input=input_text
+            model="tts-1", voice=st.session_state.settings['parameters']['voice'], input=input_text
         )
         autoplay_audio(response.content)
     except Exception as e:

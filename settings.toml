@@ -1,3 +1,10 @@
+# This is a comment.
+# This file uses the TOML format. Comments, indicated by hashtags outside of quotes, will not be processed.
+# Learn more about TOML format here: https://toml.io/en/
+# Text within quotes uses Markdown format, where hashtags indicate heading levels.
+# Learn more about Markdown here: https://www.markdownguide.org/getting-started/
+# Settings start below.
+
 title = "AI SimBot"
 error_message = "😞 Oops! An unexpected error occurred. Please try again. If the error persists, please contact the administrator."
 user_name = "Nurse"
@@ -7,7 +14,7 @@ assistant_avatar = "assets/Assistant.jpg"
 
 
 #--------------------
-
+# Intro message will be displayed before users start chatting.
 
 intro = '''
 ## Welcome to Dr. Kim’s AI SimBot.
@@ -26,6 +33,10 @@ I’ll be Jordan, a 17-year-old, non-binary student visiting your outpatient cli
 '''
 
 warning = "Please be advised that this patient simulation includes themes and discussions of substance use. This simulation might evoke strong emotions or may be distressing for individuals with personal experiences related to substance use or addiction. If you feel overwhelmed by the content, please discontinue the simulation and reach out to your course faculty, or schedule an appointment with [Northeastern University Health & Counseling Services](https://uhcs.northeastern.edu/). If you or someone you know is struggling with substance use or addiction, support is available."
+
+#--------------------
+# The instruction field in the settings is a crucial component of the AI SimBot, as it directly influences the quality and relevance of the user experience. 
+# For more details on prompt engineering, refer to the "Importance of Prompt" section in the README.
 
 instruction = '''
 You are supposed to act as the patient, Jordan, at an outpatient pediatric office. You have made an appointment at the office for a routine physical, required for school sports participation. You will never ask any questions because they will be asked by the user. The user is the nurse and they'll ask you questions about your visit. Make sure to speak naturally based on your patient background. You'll be having the complete conversation with the nurse. Make sure to express emotions, concerns, and needs, reflecting a true-to-life patient encounter. The conversation will start with an introduction and then you'll answer all the questions from the user. 
@@ -141,6 +152,9 @@ In addition, provide feedback on the nurse's use of therapeutic communication te
 
 
 [sidebar]
+# Add or remove fields as needed.
+# Key names should not contain spaces. Use the _ symbol, which will be replaced with spaces when displayed in the sidebar.
+
 Avatar = "assets/Jordan.jpg"
 Name = "Jordan Taylor"
 Age = "17"
@@ -152,5 +166,11 @@ Visit_Reason = "Routine physical exam required for school sports participation."
 
 
 [parameters]
-model = "gpt-4o"
+# Use one of the followings: alloy, ash, coral, echo, fable, onyx, nova, sage and shimmer.
+# Previews of the voices are available in the Text to speech guide: https://platform.openai.com/docs/guides/text-to-speech#voice-options
+
+voice = "nova"
+# gpt-4o-mini: fast and cheaper model but with less quality
+model = "gpt-4o" 
+# Specify between 0 and 2. Higher values like 0.8 will make the output more random (or creative), while lower values like 0.2 will make it more focused and deterministic.
 temperature = 0.7
