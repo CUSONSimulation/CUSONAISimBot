@@ -50,6 +50,7 @@ def password_entered():
     if hmac.compare_digest(st.session_state["password"], st.secrets["password"]):
         st.session_state["password_correct"] = True
         del st.session_state["password"]  # Don't store the password.
+        autoplay_audio(open("assets/unlock.mp3", "rb").read())
     else:
         st.session_state["password_correct"] = False
 
@@ -196,7 +197,6 @@ def setup_sidebar():
     if "password_correct" in st.session_state and st.session_state.password_correct:
         st.session_state.chat_active = True
         st.session_state.show_intro = False
-        autoplay_audio(open("assets/unlock.mp3", "rb").read())
     else:
         st.sidebar.header("Access Code")
         with st.sidebar.container(border=True):
@@ -295,25 +295,28 @@ def main():
     # Check if chat is active
     if st.session_state.chat_active:
         show_messages()
+
         # Check if there's a manual input and process it
         if st.session_state.manual_input:
             user_query = st.session_state.manual_input
-            st.session_state.manual_input = None  # Clear manual input after use
         else:
             if st.session_state.end_session_button_clicked:
-                user_query = None  # Prevent any input after the end session
+                user_query = st.chat_input(
+                    "Ask further questions."
+                )
             else:
                 user_query = st.chat_input(
                     "Click 'End Session' Button to Receive Feedback and Download Transcript."
                 )
-
-        transcript = handle_audio_input(speech_client)
-        if transcript:
-            user_query = transcript
+                transcript = handle_audio_input(speech_client)
+                if transcript:
+                    user_query = transcript
 
         if user_query:
-            # raise ValueError("An intentional error occurred!")
             process_user_query(text_client, speech_client, user_query)
+            if st.session_state.manual_input:
+                st.session_state.manual_input = None
+                st.rerun()
 
     st.sidebar.warning(st.session_state.settings["warning"])
 
