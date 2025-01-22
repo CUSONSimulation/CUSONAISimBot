@@ -1,6 +1,7 @@
 import streamlit as st
 import os
 from openai import OpenAI
+import anthropic
 from io import BytesIO
 import base64
 from streamlit_mic_recorder import mic_recorder
@@ -93,8 +94,27 @@ def autoplay_audio(audio_data):
     st.markdown(md, unsafe_allow_html=True)
 
 
-# Send prompt and get response
-def stream_response(client, messages):
+# Send prompt to Anthropic and get response
+def stream_response_anthropic(client, messages):
+    try:
+        stream = client.messages.create(
+            model=st.session_state.settings["parameters"]["model"],
+            messages=messages[1:],
+            max_tokens=1000,
+            system = messages[0]['content'],
+            temperature=st.session_state.settings["parameters"]["temperature"],
+            stream=True,
+        )
+        for chunk in stream:
+            if isinstance(chunk, anthropic.types.raw_content_block_delta_event.RawContentBlockDeltaEvent):
+                yield chunk.delta.text
+    except Exception as e:
+        log.exception("")
+
+
+
+# Send prompt to OpenAI and get response
+def stream_response_openai(client, messages):
     try:
         stream = client.chat.completions.create(
             model=st.session_state.settings["parameters"]["model"],
@@ -217,12 +237,12 @@ def handle_audio_input(client):
     if audio and audio["id"] != st.session_state.processed_audio:
         audio_bio = io.BytesIO(audio["bytes"])
         audio_bio.name = "audio.wav"
-        transcript = speech_to_text(client, audio_bio)
+        transcript = speech_to_text(speech_client, audio_bio)
         st.session_state.processed_audio = audio["id"]
         return transcript
 
 
-def process_user_query(client, user_query):
+def process_user_query(text_client, speech_client, user_query):
     # Display the user's query
     with st.chat_message(
         st.session_state.settings["user_name"],
@@ -245,7 +265,7 @@ def process_user_query(client, user_query):
         assistant_reply = ""
 
         # Iterate through the stream
-        for chunk in stream_response(client, st.session_state.messages):
+        for chunk in stream_response_openai(text_client, st.session_state.messages) if st.session_state.settings['parameters']['model'].startswith("gpt") else stream_response_anthropic(text_client, st.session_state.messages):
             assistant_reply += chunk
             assistant_reply_box.markdown(assistant_reply)
 
@@ -254,15 +274,16 @@ def process_user_query(client, user_query):
             {"role": "assistant", "content": assistant_reply.strip()}
         )
         if not st.session_state.end_session_button_clicked:
-            text_to_speech(client, assistant_reply)
+            text_to_speech(speech_client, assistant_reply)
 
 
 def main():
     # Inject CSS for custom styles
     local_css("style.css")
 
-    client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
     init_session()
+    text_client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"]) if st.session_state.settings['parameters']['model'].startswith("gpt") else anthropic.Anthropic(api_key=st.secrets["ANTHROPIC_API_KEY"])
+    speech_client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
     st.title(st.session_state.settings["title"])
     setup_sidebar()
 
@@ -286,13 +307,13 @@ def main():
                     "Click 'End Session' Button to Receive Feedback and Download Transcript."
                 )
 
-        transcript = handle_audio_input(client)
+        transcript = handle_audio_input(speech_client)
         if transcript:
             user_query = transcript
 
         if user_query:
             # raise ValueError("An intentional error occurred!")
-            process_user_query(client, user_query)
+            process_user_query(text_client, speech_client, user_query)
 
     st.sidebar.warning(st.session_state.settings["warning"])
 

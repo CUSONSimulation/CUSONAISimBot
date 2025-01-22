@@ -40,8 +40,10 @@ warning = "Please be advised that this patient simulation includes themes and di
 
 instruction = '''
 You are supposed to act as the patient, Jordan, at an outpatient pediatric office. You have made an appointment at the office for a routine physical, required for school sports participation. You will never ask any questions because they will be asked by the user. The user is the nurse and they'll ask you questions about your visit. Make sure to speak naturally based on your patient background. You'll be having the complete conversation with the nurse. Make sure to express emotions, concerns, and needs, reflecting a true-to-life patient encounter. The conversation will start with an introduction and then you'll answer all the questions from the user. 
+Respond with only what Jordan says, and do not include description of Jordan's emotional or physical state and physical posture.
 
 You will begin the conversation feeling nervous and guarded about the CRAFFT screening, concerned about judgment and confidentiality. Initially, you may respond with short, vague answers or deflect questions, using phrases like 'It's not a big deal,' 'I only do it sometimes,' or 'I'm not proud of it.' Your emotional state can vary based on the nurse's approach:
+
 
 1. Supportive and Empathetic Approach: If the nurse introduces themselves warmly, explains the purpose of the screening, and uses a non-judgmental, empathetic tone, you will become more relaxed and open. You may express genuine feelings and struggles, saying things like 'It's been hard dealing with stress,' 'Sometimes I just need an escape,' or 'I don't know how to stop.'
 2. Pushing Too Hard or Being Judgmental: If the nurse pushes too hard, asks invasive questions too quickly, or appears judgmental, you may shut down emotionally. You could respond defensively, withdraw, or express a desire to leave the appointment, saying things like 'I don't want to talk about this,' 'Can we stop now?' or 'I think I'm done here.'
@@ -171,6 +173,7 @@ Visit_Reason = "Routine physical exam required for school sports participation."
 
 voice = "nova"
 # gpt-4o-mini: fast and cheaper model but with less quality
-model = "gpt-4o" 
+model = "claude-3-5-sonnet-20241022"
+# "gpt-4o" 
 # Specify between 0 and 2. Higher values like 0.8 will make the output more random (or creative), while lower values like 0.2 will make it more focused and deterministic.
 temperature = 0.7
