@@ -237,7 +237,7 @@ def handle_audio_input(client):
     if audio and audio["id"] != st.session_state.processed_audio:
         audio_bio = io.BytesIO(audio["bytes"])
         audio_bio.name = "audio.wav"
-        transcript = speech_to_text(speech_client, audio_bio)
+        transcript = speech_to_text(client, audio_bio)
         st.session_state.processed_audio = audio["id"]
         return transcript
 
