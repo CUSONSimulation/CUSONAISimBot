@@ -36,18 +36,23 @@ https://github.com/user-attachments/assets/ad79cd24-13ff-492a-9de3-059b10e470fe
 
 ## Setup
 
+In order to launch this app, you need to configure and set up the following three services:
+
 1. [Create an OpenAI account](https://platform.openai.com/api-keys).  
+   - Purpose: Provides the AI capabilities for the app, including managing conversations, converting speech to text, and generating spoken responses.
    - [Generate an API key](https://platform.openai.com/api-keys).  
    - Write down your key, as it will not be shown again.  
    - You can delete and create a new key if needed.  
    - [Purchase credits](https://help.openai.com/en/articles/8264644-how-can-i-set-up-prepaid-billing) for API use. It may takes a few hours for API to be active.
 
 2. [Create a GitHub account](https://github.com/signup).  
-   - [Fork this project](https://github.com/AISimBot/AISimBot/fork).  
+   - Purpose: Organizes and stores the app's code, making it easy to update and manage.
+   - [Click here and fork this project](https://github.com/AISimBot/AISimBot/fork).  
    - Name your fork and click **Create fork**.  
    - Save the URL for your forked repository.  
 
 3. [Create a Streamlit account](https://streamlit.app/).  
+   - Purpose: Hosts the app on a server and makes it accessible to users through a browser.
    - Click **Create an app**.  
    - Select **Deploy from repo**.  
    - Enter the URL of your forked repository.  
@@ -63,7 +68,8 @@ https://github.com/user-attachments/assets/ad79cd24-13ff-492a-9de3-059b10e470fe
 
 > **Note:** Secrets may take a few minutes to propagate. If you see an error about a missing key, wait a few minutes and then reboot your app under **Manage app**.  
 
-If the issue persists, confirm that the key appears under **App settings > Secrets**.  
+If the issue persists, confirm that the key appears under **App settings > Secrets**.
+
 Once set up correctly, you’ll see the app interface.
 
 ### Testing Your App
