@@ -354,7 +354,7 @@ def main():
             user_query = st.session_state.manual_input
         else:
             if st.session_state.end_session_button_clicked:
-                user_query = st.chat_input("Ask further questions.")
+                user_query = st.chat_input("Questions about your feedback? Ask them here.")
             else:
                 user_query = st.chat_input(
                     "Click 'End Session' Button to Receive Feedback and Download Transcript."
