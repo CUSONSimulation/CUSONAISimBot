@@ -318,13 +318,8 @@ def main():
                 st.session_state.manual_input = None
                 st.rerun()
 
-    st.sidebar.warning(st.session_state.settings["warning"])
-
-    # Handle end session
-    if st.session_state.end_session_button_clicked:
-        st.button("End Session", disabled=True)
-    else:
-        if len(st.session_state.messages) > 1:
+        # Handle end session
+        if not st.session_state.end_session_button_clicked and len(st.session_state.messages) > 1:
             if st.button("End Session"):
                 st.session_state.end_session_button_clicked = True
                 st.session_state.download_transcript = True
@@ -332,10 +327,11 @@ def main():
                 # Trigger the manual input immediately
                 st.rerun()
 
-    # Show the download button
-    if st.session_state.download_transcript:
-        show_download()
+        # Show the download button
+        if st.session_state.download_transcript:
+            show_download()
 
+    st.sidebar.warning(st.session_state.settings["warning"])
 
 if __name__ == "__main__":
     try:
