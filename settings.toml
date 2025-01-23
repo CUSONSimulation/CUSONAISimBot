@@ -5,7 +5,7 @@
 # Learn more about Markdown here: https://www.markdownguide.org/getting-started/
 # Settings start below.
 
-title = "CUSON AI SimBot"
+title = "Columbia University School of Nursing AI SimBot"
 error_message = "😞 Oops! An unexpected error occurred. Please try again. If the error persists, please contact the administrator."
 user_name = "Nurse"
 user_avatar = "assets/User.png"
