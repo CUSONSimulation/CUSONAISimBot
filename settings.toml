@@ -5,7 +5,7 @@
 # Learn more about Markdown here: https://www.markdownguide.org/getting-started/
 # Settings start below.
 
-title = "CUSON AI SimBot"
+title = "AI SimBot"
 error_message = "😞 Oops! An unexpected error occurred. Please try again. If the error persists, please contact the administrator."
 user_name = "Nurse"
 user_avatar = "assets/User.png"
@@ -17,7 +17,7 @@ assistant_avatar = "assets/Assistant.jpg"
 # Intro message will be displayed before users start chatting.
 
 intro = '''
-## Welcome to Dr. Mullen's AI SimBot.
+## Welcome to Dr. Kim's AI SimBot.
 
 This AI-powered simulation helps you practice advanced communication skills for screening substance use in adolescent patients. You can use this tool anytime, anywhere, to engage in realistic scenarios that prepare you for real-world clinical settings. My goal is to enhance your learning experience and build your confidence and competence in nursing practice. Let's get started!
 
