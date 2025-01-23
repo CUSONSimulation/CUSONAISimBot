@@ -52,21 +52,12 @@ def get_uuid():
     return id[:8]
 
 
-def get_forwarded_ip():
-    try:
-        x_forwarded_for = st.context.headers["X-Forwarded-For"]
-        first_ip = x_forwarded_for.split(", ")[0]
-        return first_ip
-    except:
-        return ""
-
-
 def get_session():
     runtime = get_instance()
     ctx = get_script_run_ctx()
     session_id = ctx.session_id
     session_info = runtime._instance.get_client(session_id)
-    return f"{get_forwarded_ip()} {session_id}"
+    return session_id
 
 
 def elapsed(start):
