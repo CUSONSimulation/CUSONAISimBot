@@ -5,6 +5,8 @@ import anthropic
 from io import BytesIO
 import base64
 from streamlit_mic_recorder import mic_recorder
+from streamlit.runtime import get_instance
+from streamlit.runtime.scriptrunner import get_script_run_ctx
 import re
 from docx import Document
 import tomllib
@@ -14,26 +16,31 @@ import io
 import logging
 import uuid
 import time
+from datetime import datetime, timedelta
 
 
 # Create a custom logger
 def get_logger():
     log = logging.getLogger(__name__)
-    log.setLevel(logging.ERROR)
-    file_handler = logging.FileHandler("log.txt", mode="a", encoding="utf-8")
-    console_handler = logging.StreamHandler()
-    formatter = logging.Formatter(
-        "{asctime}\t{levelname}\t{module}\t{threadName}\t{funcName}\t{lineno}\t{message}",
-        style="{",
-    )
-    file_handler.setFormatter(formatter)
-    console_handler.setFormatter(formatter)
-    log.addHandler(file_handler)
-    log.addHandler(console_handler)
+    if not log.hasHandlers():  # Avoid adding handlers multiple times
+        log.setLevel(logging.DEBUG)
+        file_handler = logging.FileHandler("log.txt", mode="a", encoding="utf-8")
+        console_handler = logging.StreamHandler()
+        formatter = logging.Formatter(
+            "{asctime}\t{levelname}\t{module}\t{threadName}\t{funcName}\t{lineno}\n{message}",
+            style="{",
+        )
+        file_handler.setFormatter(formatter)
+        console_handler.setFormatter(formatter)
+        log.addHandler(file_handler)
+        log.addHandler(console_handler)
     return log
 
 
-log = get_logger()
+if "logger" not in st.session_state:
+    st.session_state.logger = get_logger()
+log = st.session_state.logger
+
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 
@@ -45,12 +52,39 @@ def get_uuid():
     return id[:8]
 
 
+def get_session():
+    runtime = get_instance()
+    ctx = get_script_run_ctx()
+    session_id = ctx.session_id
+    session_info = runtime._instance.get_client(session_id)
+    return session_id
+
+
+def elapsed(start):
+    duration = time.time() - start
+    duration_td = timedelta(seconds=duration)
+    days = duration_td.days
+    hours, remainder = divmod(duration_td.seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    dur_str = ""
+    if days:
+        dur_str = f"{days} days "
+    if hours:
+        dur_str += f"{hours} hours "
+    if minutes:
+        dur_str += f"{minutes} minutes "
+    if seconds:
+        dur_str += f"{seconds} seconds"
+    return dur_str
+
+
 def password_entered():
     """Checks whether a password entered by the user is correct."""
     if hmac.compare_digest(st.session_state["password"], st.secrets["password"]):
         st.session_state["password_correct"] = True
         del st.session_state["password"]  # Don't store the password.
         autoplay_audio(open("assets/unlock.mp3", "rb").read())
+        log.info(f"Session Start: {get_session()}")
     else:
         st.session_state["password_correct"] = False
 
@@ -68,17 +102,26 @@ def local_css(file_name):
 
 def speech_to_text(client, audio):
     try:
-        return client.audio.transcriptions.create(
-            model="whisper-1", response_format="text", file=audio
+        id = audio["id"]
+        log.debug(f"STT: {id}")
+        audio_bio = io.BytesIO(audio["bytes"])
+        audio_bio.name = "audio.wav"
+        transcript = client.audio.transcriptions.create(
+            model="whisper-1", response_format="text", file=audio_bio
         )
+        st.session_state.processed_audio = id
+        return transcript
     except Exception as e:
         log.exception("")
 
 
-def text_to_speech(client, input_text):
+def text_to_speech(client, text):
     try:
+        log.debug(f"TTS: {text}")
         response = client.audio.speech.create(
-            model="tts-1", voice=st.session_state.settings['parameters']['voice'], input=input_text
+            model="tts-1",
+            voice=st.session_state.settings["parameters"]["voice"],
+            input=text,
         )
         autoplay_audio(response.content)
     except Exception as e:
@@ -98,25 +141,29 @@ def autoplay_audio(audio_data):
 # Send prompt to Anthropic and get response
 def stream_response_anthropic(client, messages):
     try:
+        log.debug(f"Sending text request to Anthropic: {messages[-1]['content']}")
         stream = client.messages.create(
             model=st.session_state.settings["parameters"]["model"],
             messages=messages[1:],
             max_tokens=1000,
-            system = messages[0]['content'],
+            system=messages[0]["content"],
             temperature=st.session_state.settings["parameters"]["temperature"],
             stream=True,
         )
         for chunk in stream:
-            if isinstance(chunk, anthropic.types.raw_content_block_delta_event.RawContentBlockDeltaEvent):
+            if isinstance(
+                chunk,
+                anthropic.types.raw_content_block_delta_event.RawContentBlockDeltaEvent,
+            ):
                 yield chunk.delta.text
     except Exception as e:
         log.exception("")
 
 
-
 # Send prompt to OpenAI and get response
 def stream_response_openai(client, messages):
     try:
+        log.debug(f"Sending text request to OpenAI: {messages[-1]['content']}")
         stream = client.chat.completions.create(
             model=st.session_state.settings["parameters"]["model"],
             messages=messages,
@@ -177,6 +224,7 @@ def init_session():
             "manual_input": None,
             "end_session_button_clicked": False,
             "download_transcript": False,
+            "start_time": time.time(),
         }
         for key, val in defaults.items():
             if key not in st.session_state:
@@ -235,10 +283,7 @@ def handle_audio_input(client):
         )
     # Check if there is a new audio recording and it has not been processed yet
     if audio and audio["id"] != st.session_state.processed_audio:
-        audio_bio = io.BytesIO(audio["bytes"])
-        audio_bio.name = "audio.wav"
-        transcript = speech_to_text(client, audio_bio)
-        st.session_state.processed_audio = audio["id"]
+        transcript = speech_to_text(client, audio)
         return transcript
 
 
@@ -265,7 +310,11 @@ def process_user_query(text_client, speech_client, user_query):
         assistant_reply = ""
 
         # Iterate through the stream
-        for chunk in stream_response_openai(text_client, st.session_state.messages) if st.session_state.settings['parameters']['model'].startswith("gpt") else stream_response_anthropic(text_client, st.session_state.messages):
+        for chunk in (
+            stream_response_openai(text_client, st.session_state.messages)
+            if st.session_state.settings["parameters"]["model"].startswith("gpt")
+            else stream_response_anthropic(text_client, st.session_state.messages)
+        ):
             assistant_reply += chunk
             assistant_reply_box.markdown(assistant_reply)
 
@@ -282,7 +331,11 @@ def main():
     local_css("style.css")
 
     init_session()
-    text_client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"]) if st.session_state.settings['parameters']['model'].startswith("gpt") else anthropic.Anthropic(api_key=st.secrets["ANTHROPIC_API_KEY"])
+    text_client = (
+        OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+        if st.session_state.settings["parameters"]["model"].startswith("gpt")
+        else anthropic.Anthropic(api_key=st.secrets["ANTHROPIC_API_KEY"])
+    )
     speech_client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
     st.title(st.session_state.settings["title"])
     setup_sidebar()
@@ -301,9 +354,7 @@ def main():
             user_query = st.session_state.manual_input
         else:
             if st.session_state.end_session_button_clicked:
-                user_query = st.chat_input(
-                    "Ask further questions."
-                )
+                user_query = st.chat_input("Ask further questions.")
             else:
                 user_query = st.chat_input(
                     "Click 'End Session' Button to Receive Feedback and Download Transcript."
@@ -319,9 +370,15 @@ def main():
                 st.rerun()
 
         # Handle end session
-        if not st.session_state.end_session_button_clicked and len(st.session_state.messages) > 1:
+        if (
+            not st.session_state.end_session_button_clicked
+            and len(st.session_state.messages) > 1
+        ):
             if st.button("End Session"):
                 st.session_state.end_session_button_clicked = True
+                log.info(
+                    f"Session end: {elapsed(st.session_state.start_time)} {get_session()}"
+                )
                 st.session_state.download_transcript = True
                 st.session_state["manual_input"] = "Goodbye. Thank you for coming."
                 # Trigger the manual input immediately
@@ -332,6 +389,7 @@ def main():
             show_download()
 
     st.sidebar.warning(st.session_state.settings["warning"])
+
 
 if __name__ == "__main__":
     try:
